@@ -159,37 +159,37 @@ List all available image format presets.
 ## Available Formats
 
 ### Blog Platforms
-| Format | Dimensions | Description |
-|--------|------------|-------------|
-| `ghost-banner` | 1200x675 | Featured image for Ghost blog posts |
-| `ghost-feature` | 2000x1125 | High-resolution feature image for Ghost |
-| `medium-ghost-spooky` | 2560x1440 | Premium high-resolution blog banner (QHD) |
-| `medium-banner` | 1400x788 | Banner image for Medium articles |
-| `substack-header` | 1456x816 | Header image for Substack posts |
-| `wordpress-featured` | 1200x675 | Featured image for WordPress posts |
+| Format | Dimensions | Ratio | Description |
+|--------|------------|-------|-------------|
+| `ghost-banner` | 1200x675 | 16:9 | Featured image for Ghost blog posts |
+| `ghost-feature` | 2000x1125 | 16:9 | High-resolution feature image for Ghost |
+| `medium-ghost-spooky` | 2560x1440 | 16:9 | Premium high-resolution blog banner (QHD) |
+| `medium-banner` | 1400x788 | 16:9 | Banner image for Medium articles |
+| `substack-header` | 1456x816 | 16:9 | Header image for Substack posts |
+| `wordpress-featured` | 1200x675 | 16:9 | Featured image for WordPress posts |
 
 ### Social Media
-| Format | Dimensions | Description |
-|--------|------------|-------------|
-| `instagram-post` | 1080x1080 | Square post for Instagram feed |
-| `instagram-story` | 1080x1920 | Vertical story/reel for Instagram |
-| `twitter-post` | 1200x675 | Image for Twitter/X posts |
-| `linkedin-post` | 1200x628 | Image for LinkedIn posts |
-| `facebook-post` | 1200x630 | Image for Facebook posts |
+| Format | Dimensions | Ratio | Description |
+|--------|------------|-------|-------------|
+| `instagram-post` | 1080x1080 | 1:1 | Square post for Instagram feed |
+| `instagram-story` | 1080x1920 | 9:16 | Vertical story/reel for Instagram |
+| `twitter-post` | 1200x675 | 16:9 | Image for Twitter/X posts |
+| `linkedin-post` | 1200x628 | ~1.91:1 | Image for LinkedIn posts |
+| `facebook-post` | 1200x630 | ~1.91:1 | Image for Facebook posts |
 
 ### Video Platforms
-| Format | Dimensions | Description |
-|--------|------------|-------------|
-| `youtube-thumbnail` | 1280x720 | Thumbnail for YouTube videos |
-| `youtube-banner` | 2560x1440 | Channel banner for YouTube |
+| Format | Dimensions | Ratio | Description |
+|--------|------------|-------|-------------|
+| `youtube-thumbnail` | 1280x720 | 16:9 | Thumbnail for YouTube videos |
+| `youtube-banner` | 2560x1440 | 16:9 | Channel banner for YouTube |
 
 ### Generic
-| Format | Dimensions | Description |
-|--------|------------|-------------|
-| `square` | 1024x1024 | Generic square image |
-| `landscape` | 1920x1080 | Standard landscape (1080p) |
-| `landscape-4k` | 3840x2160 | 4K landscape image |
-| `portrait` | 1080x1920 | Standard portrait/vertical image |
+| Format | Dimensions | Ratio | Description |
+|--------|------------|-------|-------------|
+| `square` | 1024x1024 | 1:1 | Generic square image |
+| `landscape` | 1920x1080 | 16:9 | Standard landscape (1080p) |
+| `landscape-4k` | 3840x2160 | 16:9 | 4K landscape image |
+| `portrait` | 1080x1920 | 9:16 | Standard portrait/vertical image |
 
 ## Security
 
