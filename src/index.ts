@@ -22,7 +22,7 @@ import { safeErrorMessage } from "./utils/security.js";
 
 // Server metadata
 const SERVER_NAME = "blog-image-mcp";
-const SERVER_VERSION = "1.0.0";
+const SERVER_VERSION = "1.1.1";
 
 /**
  * Create and configure the MCP server.
