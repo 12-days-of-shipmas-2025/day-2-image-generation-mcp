@@ -6,7 +6,13 @@ import { z } from "zod";
 
 import { PLATFORM_PRESETS, PRESET_KEYS, type PlatformPreset } from "../config/presets.js";
 import { createProvider, type GeneratedImage, type ProviderName } from "../providers/index.js";
-import { estimateFileSize, formatFileSize, saveImage } from "../utils/image.js";
+import {
+  estimateFileSize,
+  formatFileSize,
+  generateDefaultOutputPath,
+  saveImage,
+  type ImageMetadata,
+} from "../utils/image.js";
 import { safeErrorMessage, validateOutputPath, validatePrompt } from "../utils/security.js";
 
 /**
@@ -147,22 +153,35 @@ export async function executeGenerateImage(
   // Calculate file size
   const fileSize = formatFileSize(estimateFileSize(generatedImage.base64Data));
 
-  // Save to file if path provided
-  let savedPath: string | undefined;
-  if (input.outputPath) {
-    try {
-      savedPath = await saveImage(
-        generatedImage.base64Data,
-        input.outputPath,
-        generatedImage.mimeType
-      );
-    } catch (error) {
-      return {
-        success: false,
-        message: "Failed to save image",
-        error: safeErrorMessage(error),
-      };
-    }
+  // Determine output path - use provided path or generate a default
+  const outputPath = input.outputPath ?? generateDefaultOutputPath(generatedImage.mimeType);
+
+  // Build metadata to embed in the image
+  const metadata: ImageMetadata = {
+    prompt: input.prompt,
+    model: generatedImage.model ?? "gemini-2.0-flash-exp",
+    provider: input.provider,
+    format: input.format,
+    style: input.style,
+    title: input.title,
+    generatedAt: new Date().toISOString(),
+  };
+
+  // Always save the image to ensure it's never lost
+  let savedPath: string;
+  try {
+    savedPath = await saveImage(
+      generatedImage.base64Data,
+      outputPath,
+      generatedImage.mimeType,
+      metadata
+    );
+  } catch (error) {
+    return {
+      success: false,
+      message: "Failed to save image",
+      error: safeErrorMessage(error),
+    };
   }
 
   // Determine actual dimensions (from provider or estimate from preset)
@@ -182,13 +201,8 @@ export async function executeGenerateImage(
       `You may need to resize the image.`;
   }
 
-  // Build descriptive message
-  let message: string;
-  if (savedPath) {
-    message = `Image generated and saved to ${savedPath}`;
-  } else {
-    message = `Image generated successfully (${preset.name}, actual: ${actualWidth}x${actualHeight})`;
-  }
+  // Build descriptive message - image is always saved
+  const message = `Image generated and saved to ${savedPath}`;
 
   return {
     success: true,
@@ -227,5 +241,7 @@ ${presetList}
 Examples:
 - Generate a Ghost blog banner: { "prompt": "A serene mountain landscape at sunset", "format": "ghost-banner" }
 - High quality Instagram post: { "prompt": "Minimalist coffee cup on marble", "format": "instagram-post", "quality": "high" }
-- YouTube thumbnail with title: { "prompt": "Exciting tech reveal", "format": "youtube-thumbnail", "title": "New iPhone 17 Review" }`;
+- YouTube thumbnail with title: { "prompt": "Exciting tech reveal", "format": "youtube-thumbnail", "title": "New iPhone 17 Review" }
+
+IMPORTANT: Always specify an outputPath to save the image to a meaningful location. If omitted, images are saved to a generated-images/ directory in the current working directory with a timestamped filename.`;
 }

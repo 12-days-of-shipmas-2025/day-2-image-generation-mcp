@@ -27,6 +27,8 @@ export interface GeneratedImage {
   width?: number;
   /** Actual height of generated image */
   height?: number;
+  /** Model used to generate the image */
+  model?: string;
   /** Provider-specific metadata */
   metadata?: Record<string, unknown>;
 }

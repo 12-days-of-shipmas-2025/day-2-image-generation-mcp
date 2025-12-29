@@ -27,8 +27,12 @@ npm-debug.log*
 coverage/
 .nyc_output/
 
-# Generated images (optional, uncomment if you don't want to track)
-# *.png
-# *.jpg
-# *.jpeg
-# *.webp
+# Generated images
+generated-images/
+*.png
+*.jpg
+*.jpeg
+*.webp
+
+# Local MCP config (contains API keys)
+.mcp.json

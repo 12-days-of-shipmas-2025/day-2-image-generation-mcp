@@ -140,8 +140,8 @@ export class GeminiProvider implements ImageProvider {
             mimeType: part.inlineData.mimeType,
             width: actualDimensions.width,
             height: actualDimensions.height,
+            model,
             metadata: {
-              model,
               aspectRatio,
               requestedWidth: options.width,
               requestedHeight: options.height,

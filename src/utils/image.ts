@@ -5,6 +5,107 @@
 import { existsSync, statSync } from "fs";
 import { mkdir, writeFile } from "fs/promises";
 import { dirname, extname, join, resolve } from "path";
+import { crc32 } from "zlib";
+
+/**
+ * Metadata to embed in generated images.
+ */
+export interface ImageMetadata {
+  prompt?: string;
+  model?: string;
+  provider?: string;
+  format?: string;
+  style?: string;
+  title?: string;
+  generatedAt?: string;
+}
+
+/**
+ * Create a PNG tEXt chunk with the given keyword and text.
+ * PNG tEXt chunk format: keyword (1-79 bytes) + null byte + text
+ */
+function createPngTextChunk(keyword: string, text: string): Buffer {
+  // Validate keyword (1-79 Latin-1 chars, no spaces at start/end)
+  const safeKeyword = keyword.slice(0, 79).trim();
+  const keywordBuf = Buffer.from(safeKeyword, "latin1");
+  const textBuf = Buffer.from(text, "utf8");
+
+  // Data = keyword + null + text
+  const data = Buffer.concat([keywordBuf, Buffer.from([0]), textBuf]);
+
+  // Chunk type
+  const type = Buffer.from("tEXt", "ascii");
+
+  // Length (4 bytes, big-endian)
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length, 0);
+
+  // CRC32 of type + data
+  const crcData = Buffer.concat([type, data]);
+  const crcValue = crc32(crcData);
+  const crcBuf = Buffer.alloc(4);
+  crcBuf.writeUInt32BE(crcValue >>> 0, 0); // >>> 0 ensures unsigned
+
+  // Full chunk: length + type + data + crc
+  return Buffer.concat([length, type, data, crcBuf]);
+}
+
+/**
+ * Insert metadata text chunks into a PNG buffer.
+ * Chunks are inserted after the IHDR chunk (required to be first).
+ */
+export function embedPngMetadata(pngBuffer: Buffer, metadata: ImageMetadata): Buffer {
+  // PNG signature is 8 bytes
+  const PNG_SIGNATURE_LENGTH = 8;
+
+  // Verify PNG signature
+  const signature = pngBuffer.slice(0, PNG_SIGNATURE_LENGTH);
+  const expectedSig = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
+  if (!signature.equals(expectedSig)) {
+    // Not a valid PNG, return as-is
+    return pngBuffer;
+  }
+
+  // Find the end of IHDR chunk (first chunk after signature)
+  // Chunk format: 4 bytes length + 4 bytes type + data + 4 bytes CRC
+  const ihdrLength = pngBuffer.readUInt32BE(PNG_SIGNATURE_LENGTH);
+  const ihdrEnd = PNG_SIGNATURE_LENGTH + 4 + 4 + ihdrLength + 4;
+
+  // Create metadata chunks
+  const chunks: Buffer[] = [];
+
+  if (metadata.prompt) {
+    chunks.push(createPngTextChunk("Description", metadata.prompt));
+  }
+  if (metadata.model) {
+    chunks.push(createPngTextChunk("AI-Model", metadata.model));
+  }
+  if (metadata.provider) {
+    chunks.push(createPngTextChunk("AI-Provider", metadata.provider));
+  }
+  if (metadata.format) {
+    chunks.push(createPngTextChunk("Image-Format", metadata.format));
+  }
+  if (metadata.style) {
+    chunks.push(createPngTextChunk("AI-Style", metadata.style));
+  }
+  if (metadata.title) {
+    chunks.push(createPngTextChunk("Title", metadata.title));
+  }
+  if (metadata.generatedAt) {
+    chunks.push(createPngTextChunk("Creation-Time", metadata.generatedAt));
+  }
+
+  // Also add a software tag
+  chunks.push(createPngTextChunk("Software", "image-generation-mcp"));
+
+  // Combine: signature + IHDR + metadata chunks + rest of file
+  const beforeMetadata = pngBuffer.slice(0, ihdrEnd);
+  const afterIhdr = pngBuffer.slice(ihdrEnd);
+  const metadataBuffer = Buffer.concat(chunks);
+
+  return Buffer.concat([beforeMetadata, metadataBuffer, afterIhdr]);
+}
 
 /**
  * Get file extension from MIME type.
@@ -44,11 +145,13 @@ export function sanitizeFilename(name: string): string {
 /**
  * Save base64 image data to a file.
  * If outputPath is a directory, generates a filename automatically.
+ * If metadata is provided and the image is a PNG, embeds metadata as tEXt chunks.
  */
 export async function saveImage(
   base64Data: string,
   outputPath: string,
-  mimeType: string = "image/png"
+  mimeType: string = "image/png",
+  metadata?: ImageMetadata
 ): Promise<string> {
   // Resolve to absolute path
   let absolutePath = resolve(outputPath);
@@ -77,9 +180,14 @@ export async function saveImage(
     finalPath += getExtensionFromMimeType(mimeType);
   }
 
-  // Decode and write
-  const buffer = Buffer.from(base64Data, "base64");
-  await writeFile(finalPath, buffer);
+  // Decode image data
+  const rawBuffer = Buffer.from(base64Data, "base64");
+
+  // Embed metadata if provided and image is PNG
+  const finalBuffer =
+    metadata && mimeType === "image/png" ? embedPngMetadata(rawBuffer, metadata) : rawBuffer;
+
+  await writeFile(finalPath, finalBuffer);
 
   return finalPath;
 }
@@ -99,4 +207,29 @@ export function formatFileSize(bytes: number): string {
   if (bytes < 1024) return `${bytes} B`;
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+/**
+ * Get the default output directory for generated images.
+ * Uses IMAGE_OUTPUT_DIR env var if set, otherwise falls back to cwd/generated-images.
+ */
+export function getDefaultOutputDir(): string {
+  const envDir = process.env.IMAGE_OUTPUT_DIR;
+  if (envDir) {
+    return resolve(envDir);
+  }
+  return join(process.cwd(), "generated-images");
+}
+
+/**
+ * Generate a default output path for an image.
+ * Creates a timestamped filename in the default output directory.
+ */
+export function generateDefaultOutputPath(
+  mimeType: string = "image/png",
+  prefix: string = "blog-image"
+): string {
+  const dir = getDefaultOutputDir();
+  const filename = generateFilename(prefix, mimeType);
+  return join(dir, filename);
 }
