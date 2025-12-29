@@ -1,6 +1,6 @@
 {
   "name": "image-generation-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "MCP server for generating blog images using AI (Nano Banana/Gemini and more)",
   "type": "module",
   "main": "dist/index.js",
@@ -62,10 +62,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/12-days-of-shipmas-2025/day-1-image-generation-mcp.git"
+    "url": "git+https://github.com/12-days-of-shipmas-2025/day-2-image-generation-mcp.git"
   },
-  "homepage": "https://github.com/12-days-of-shipmas-2025/day-1-image-generation-mcp#readme",
+  "homepage": "https://github.com/12-days-of-shipmas-2025/day-2-image-generation-mcp#readme",
   "bugs": {
-    "url": "https://github.com/12-days-of-shipmas-2025/day-1-image-generation-mcp/issues"
+    "url": "https://github.com/12-days-of-shipmas-2025/day-2-image-generation-mcp/issues"
   }
 }
