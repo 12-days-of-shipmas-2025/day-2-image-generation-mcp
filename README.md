@@ -11,9 +11,10 @@ An MCP (Model Context Protocol) server for generating blog and social media imag
 
 - **Platform Presets**: Pre-configured dimensions for Ghost, Medium, Instagram, Twitter, LinkedIn, YouTube, and more
 - **Multiple Quality Levels**: Standard (fast) or High (uses Gemini Pro for better quality)
+- **Auto-Save**: Images are always saved to disk (never lost as base64-only responses)
+- **PNG Metadata**: Prompt, model, style, and generation info embedded in every image
 - **Provider Architecture**: Extensible design to support multiple AI providers
 - **Security First**: Input validation, prompt sanitization, safe error handling
-- **Flexible Output**: Return base64 image data or save directly to disk
 
 ## Quick Start
 
@@ -22,6 +23,7 @@ An MCP (Model Context Protocol) server for generating blog and social media imag
 | Variable | Required | Description |
 |----------|----------|-------------|
 | `GOOGLE_API_KEY` | Yes | Your Google AI API key for Gemini |
+| `IMAGE_OUTPUT_DIR` | No | Default directory for saved images (defaults to `./generated-images`) |
 
 Get your API key from [Google AI Studio](https://aistudio.google.com/apikey).
 
@@ -136,7 +138,7 @@ Generate an image for blog posts or social media.
 | `quality` | string | No | `standard` or `high` (default: `standard`) |
 | `style` | string | No | Style hint (e.g., "photorealistic", "illustration") |
 | `title` | string | No | Blog post title for context |
-| `outputPath` | string | No | Path to save the image file |
+| `outputPath` | string | No | Path to save the image (defaults to `./generated-images/` with timestamp) |
 | `provider` | string | No | Provider to use (default: `gemini`) |
 
 **Example:**
@@ -190,6 +192,30 @@ List all available image format presets.
 | `landscape` | 1920x1080 | 16:9 | Standard landscape (1080p) |
 | `landscape-4k` | 3840x2160 | 16:9 | 4K landscape image |
 | `portrait` | 1080x1920 | 9:16 | Standard portrait/vertical image |
+
+## PNG Metadata
+
+Every generated PNG image includes embedded metadata:
+
+| Field | Description |
+|-------|-------------|
+| `Description` | The original prompt |
+| `AI-Model` | Model used (e.g., `gemini-2.5-flash-image`) |
+| `AI-Provider` | Provider name (`gemini`) |
+| `Image-Format` | Preset used (e.g., `twitter-post`) |
+| `AI-Style` | Style hint if specified |
+| `Title` | Blog post title if specified |
+| `Creation-Time` | ISO timestamp |
+| `Software` | `image-generation-mcp` |
+
+**View metadata:**
+```bash
+# macOS/Linux
+strings your-image.png | grep -E "^(Description|AI-|Title|Creation)"
+
+# Or use exiftool
+exiftool your-image.png
+```
 
 ## Security
 
