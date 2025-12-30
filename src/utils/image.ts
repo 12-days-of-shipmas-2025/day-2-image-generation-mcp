@@ -96,8 +96,9 @@ export function embedPngMetadata(pngBuffer: Buffer, metadata: ImageMetadata): Bu
     chunks.push(createPngTextChunk("Creation-Time", metadata.generatedAt));
   }
 
-  // Also add a software tag
+  // Also add software and source tags
   chunks.push(createPngTextChunk("Software", "image-generation-mcp"));
+  chunks.push(createPngTextChunk("Source", "https://github.com/12-days-of-shipmas-2025/day-2-image-generation-mcp"));
 
   // Combine: signature + IHDR + metadata chunks + rest of file
   const beforeMetadata = pngBuffer.slice(0, ihdrEnd);
